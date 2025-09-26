@@ -6,11 +6,12 @@ import com.example.chequeprocessing.domain.Cheque;
 import com.example.chequeprocessing.domain.ChequeStatus;
 import com.example.chequeprocessing.repository.AccountRepository;
 import com.example.chequeprocessing.repository.ChequeRepository;
-import com.example.chequeprocessing.security.JwtUtil;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,11 @@ import java.io.IOException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = {"spring.profiles.active=test"})
 public class IntegrationTest {
     @LocalServerPort
     int port;
@@ -38,8 +38,6 @@ public class IntegrationTest {
     AccountRepository accountRepository;
     @Autowired
     ChequeRepository chequeRepository;
-    @Autowired
-    JwtUtil jwtUtil;
 
     RestTemplate rest = new RestTemplate();
 
@@ -56,26 +54,20 @@ public class IntegrationTest {
         registry.add("sayad.base-url", () -> "http://localhost:" + wiremock.port() + "/sayad");
     }
 
-    String token;
 
     @BeforeEach
-    void auth() {
-        // Do not throw on 4xx so we can assert 409 responses
+    void setup() {
+        // Configure RestTemplate to not throw exceptions on 4xx responses
         rest.setErrorHandler(new DefaultResponseErrorHandler() {
             @Override
             public boolean hasError(ClientHttpResponse response) throws IOException {
-                return false;
+                return response.getStatusCode().is5xxServerError(); // Only throw for 5xx errors
             }
         });
-        // Generate JWT token directly for testing
-        token = jwtUtil.generateToken("teller1", "ROLE_TELLER");
-        assertNotNull(token);
     }
 
-
-    private HttpHeaders authHeaders() {
+    private HttpHeaders headers() {
         HttpHeaders h = new HttpHeaders();
-        h.setBearerAuth(token);
         h.setContentType(MediaType.APPLICATION_JSON);
         return h;
     }
@@ -85,13 +77,13 @@ public class IntegrationTest {
         Account a = accountRepository.findAll().stream().filter(ac -> ac.getBalance().compareTo(new BigDecimal("300000")) >= 0).findFirst().orElseThrow();
 
         String body = "{\"drawerId\":" + a.getId() + ",\"number\":\"YT-2025-0001\",\"amount\":150000.00}";
-        ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, authHeaders()), Cheque.class);
+        ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, headers()), Cheque.class);
         assertEquals(HttpStatus.CREATED, issued.getStatusCode());
 
         Cheque cheque = issued.getBody();
         assertNotNull(cheque);
 
-        ResponseEntity<Cheque> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, authHeaders()), Cheque.class);
+        ResponseEntity<Cheque> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, headers()), Cheque.class);
         assertEquals(HttpStatus.OK, presented.getStatusCode());
         assertEquals(ChequeStatus.PAID, presented.getBody().getStatus());
     }
@@ -104,20 +96,23 @@ public class IntegrationTest {
         for (int i = 1; i <= 3; i++) {
             String number = "YT-2025-20" + i;
             String body = "{\"drawerId\": " + a.getId() + ", \"number\": \"" + number + "\", \"amount\": 500.00}";
+            
             // Ensure enough funds for issuance
             Account toTopUp = accountRepository.findById(a.getId()).orElseThrow();
             toTopUp.setBalance(new BigDecimal("1000.00"));
             accountRepository.save(toTopUp);
 
-            ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, authHeaders()), Cheque.class);
+            ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, headers()), Cheque.class);
+            assertEquals(HttpStatus.CREATED, issued.getStatusCode());
             Cheque cheque = issued.getBody();
+            assertNotNull(cheque);
 
             // Force insufficient funds before presenting
             Account toDrain = accountRepository.findById(a.getId()).orElseThrow();
             toDrain.setBalance(new BigDecimal("100.00"));
             accountRepository.save(toDrain);
 
-            ResponseEntity<String> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, authHeaders()), String.class);
+            ResponseEntity<String> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, headers()), String.class);
             assertEquals(HttpStatus.CONFLICT, presented.getStatusCode());
         }
 
@@ -131,17 +126,19 @@ public class IntegrationTest {
         Account a = accountRepository.findAll().stream().filter(ac -> ac.getBalance().compareTo(new BigDecimal("300000")) >= 0).findFirst().orElseThrow();
 
         String body = "{\"drawerId\": " + a.getId() + ", \"number\": \"YT-2025-STALE\", \"amount\": 1000.00}";
-        ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, authHeaders()), Cheque.class);
+        ResponseEntity<Cheque> issued = rest.exchange("http://localhost:" + port + "/api/cheques", HttpMethod.POST, new HttpEntity<>(body, headers()), Cheque.class);
+        assertEquals(HttpStatus.CREATED, issued.getStatusCode());
         Cheque cheque = issued.getBody();
+        assertNotNull(cheque);
 
         // Backdate the cheque to make it stale (> 6 months)
         Cheque toBackdate = chequeRepository.findById(cheque.getId()).orElseThrow();
         toBackdate.setIssueDate(LocalDate.now().minusMonths(7));
         chequeRepository.save(toBackdate);
 
-        ResponseEntity<String> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, authHeaders()), String.class);
-        // Assert rejection occurred (either 4xx or 5xx)
-        assertTrue(presented.getStatusCode().is4xxClientError() || presented.getStatusCode().is5xxServerError());
+        ResponseEntity<String> presented = rest.exchange("http://localhost:" + port + "/api/cheques/" + cheque.getId() + "/present", HttpMethod.POST, new HttpEntity<>(null, headers()), String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, presented.getStatusCode());
+        assertTrue(presented.getBody().contains("Cheque is stale"));
     }
 }
 

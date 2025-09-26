@@ -1,16 +1,42 @@
 -------------------------------------------------------------------------------
 Test set: com.example.chequeprocessing.IntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 5.947 s <<< FAILURE! -- in com.example.chequeprocessing.IntegrationTest
-com.example.chequeprocessing.IntegrationTest.bounce_then_block_after_three -- Time elapsed: 0.055 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: expected: <409 CONFLICT> but was: <403 FORBIDDEN>
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 4.261 s <<< FAILURE! -- in com.example.chequeprocessing.IntegrationTest
+com.example.chequeprocessing.IntegrationTest.reject_stale_cheque_over_6_months -- Time elapsed: 0.369 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <201 CREATED> but was: <403 FORBIDDEN>
 	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
 	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
 	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
 	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
-	at com.example.chequeprocessing.IntegrationTest.bounce_then_block_after_three(IntegrationTest.java:121)
+	at com.example.chequeprocessing.IntegrationTest.reject_stale_cheque_over_6_months(IntegrationTest.java:130)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.example.chequeprocessing.IntegrationTest.issue_then_present_paid -- Time elapsed: 0.010 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <201 CREATED> but was: <403 FORBIDDEN>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at com.example.chequeprocessing.IntegrationTest.issue_then_present_paid(IntegrationTest.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.example.chequeprocessing.IntegrationTest.bounce_then_block_after_three -- Time elapsed: 0.020 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <201 CREATED> but was: <403 FORBIDDEN>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at com.example.chequeprocessing.IntegrationTest.bounce_then_block_after_three(IntegrationTest.java:106)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChequeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cheque-processing</a> &gt; <a href="index.source.html" class="el_package">com.example.chequeprocessing.web</a> &gt; <span class="el_source">ChequeController.java</span></div><h1>ChequeController.java</h1><pre class="source lang-java linenums">package com.example.chequeprocessing.web;
+
+import com.example.chequeprocessing.domain.Cheque;
+import com.example.chequeprocessing.service.ChequeService;
+import com.example.chequeprocessing.web.dto.IssueChequeRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+
+@RestController
+@RequestMapping(&quot;/api/cheques&quot;)
+public class ChequeController {
+    private final ChequeService chequeService;
+
+<span class="fc" id="L19">    public ChequeController(ChequeService chequeService) {</span>
+<span class="fc" id="L20">        this.chequeService = chequeService;</span>
+<span class="fc" id="L21">    }</span>
+
+    @PostMapping
+    @PreAuthorize(&quot;hasRole('TELLER')&quot;)
+    public ResponseEntity&lt;Cheque&gt; issue(@RequestBody IssueChequeRequest request) {
+        try {
+<span class="fc" id="L27">            Cheque issuedCheque = chequeService.issueCheque(request.getDrawerId(), request.getNumber(), request.getAmount(), LocalDate.now());</span>
+<span class="fc" id="L28">            return new ResponseEntity&lt;&gt;(issuedCheque, HttpStatus.CREATED);</span>
+<span class="nc" id="L29">        } catch (IllegalArgumentException | IllegalStateException e) {</span>
+<span class="nc" id="L30">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+        }
+    }
+
+    @PostMapping(&quot;/{id}/present&quot;)
+    @PreAuthorize(&quot;hasRole('TELLER')&quot;)
+    public ResponseEntity&lt;Cheque&gt; present(@PathVariable(&quot;id&quot;) Long id) {
+        try {
+<span class="fc" id="L38">            Cheque presentedCheque = chequeService.presentCheque(id, LocalDate.now());</span>
+<span class="fc" id="L39">            return ResponseEntity.ok(presentedCheque);</span>
+<span class="fc" id="L40">        } catch (ChequeService.ChequeBounceException e) {</span>
+<span class="fc" id="L41">            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());</span>
+<span class="fc" id="L42">        } catch (IllegalArgumentException | IllegalStateException e) {</span>
+<span class="fc" id="L43">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+        }
+    }
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

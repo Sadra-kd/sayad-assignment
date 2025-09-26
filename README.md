@@ -78,7 +78,7 @@ JaCoCo report: `target/site/jacoco/index.html`
 
 ### 2. Test Report
 - **Test Report File:** `TEST_REPORT.md` (in repository root)
-- **Test Success Rate:** 89% (8/9 tests passing)
+- **Test Success Rate:** 67% (6/9 tests passing)
 - **Coverage Analysis:** JaCoCo report generated
 - **Business Logic Validation:** All core features tested and working
 - **Integration Tests:** WireMock-based external service mocking
