@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Cheque Processing API",
+    "description": "Spring Boot REST API for cheque processing with JWT authentication. Supports cheque issuance and presentation with business rule validation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "c7b0c7a0-6f5d-4f1e-8f2c-cc6b0c7a0c7a"
+  },
+  "item": [
+    {
+      "name": "Cheques",
+      "item": [
+        {
+          "name": "Issue Cheque",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"drawerId\": {{drawerId}},\n  \"number\": \"{{chequeNumber}}\",\n  \"amount\": {{amount}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cheques",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cheques"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Cheque Issued",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"drawerId\": 1,\n  \"number\": \"YT-2025-0001\",\n  \"amount\": 150000.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"number\": \"YT-2025-0001\",\n  \"amount\": 150000.00,\n  \"issueDate\": \"2025-01-26\",\n  \"status\": \"ISSUED\",\n  \"drawer\": {\n    \"id\": 1,\n    \"balance\": 850000.00,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Error - Insufficient Funds",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"drawerId\": 1,\n  \"number\": \"YT-2025-0002\",\n  \"amount\": 2000000.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"timestamp\": \"2025-01-26T14:30:00.000+00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Insufficient funds for issuance\",\n  \"path\": \"/api/cheques\"\n}"
+            },
+            {
+              "name": "Error - Bearer Cheque",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"drawerId\": 1,\n  \"number\": \"BEARER-2025-0001\",\n  \"amount\": 1000.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"timestamp\": \"2025-01-26T14:30:00.000+00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Cheques cannot be bearer.\",\n  \"path\": \"/api/cheques\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('issued', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.id).to.exist;",
+                  "  pm.collectionVariables.set('chequeId', json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Present Cheque",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cheques/{{chequeId}}/present",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cheques",
+                "{{chequeId}}",
+                "present"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Cheque Paid",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques/1/present",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques", "1", "present"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"number\": \"YT-2025-0001\",\n  \"amount\": 150000.00,\n  \"issueDate\": \"2025-01-26\",\n  \"status\": \"PAID\",\n  \"drawer\": {\n    \"id\": 1,\n    \"balance\": 700000.00,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Error - Cheque Bounced",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques/2/present",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques", "2", "present"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"timestamp\": \"2025-01-26T14:30:00.000+00:00\",\n  \"status\": 409,\n  \"error\": \"Conflict\",\n  \"message\": \"Cheque bounced.\",\n  \"path\": \"/api/cheques/2/present\"\n}"
+            },
+            {
+              "name": "Error - Stale Cheque",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques/3/present",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques", "3", "present"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"timestamp\": \"2025-01-26T14:30:00.000+00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Cheque is stale (older than 6 months)\",\n  \"path\": \"/api/cheques/3/present\"\n}"
+            },
+            {
+              "name": "Error - Cheque Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/cheques/999/present",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "cheques", "999", "present"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"timestamp\": \"2025-01-26T14:30:00.000+00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Cheque not found\",\n  \"path\": \"/api/cheques/999/present\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('presented successfully', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('PAID');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "drawerId", "value": "1" },
+    { "key": "chequeNumber", "value": "YT-2025-0001" },
+    { "key": "amount", "value": "150000.00" },
+    { "key": "token", "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZWxsZXIxIiwicm9sZSI6IlJPTEVfVEVMTEVSIiwiaWF0IjoxNzU4ODg1MzI2LCJleHAiOjE3NTg4ODg5MjZ9.OpmbyQYNgEuQDIldbwqf82oIEvjPN6yccQFQVXOLH5A" },
+    { "key": "chequeId", "value": "" }
+  ]
+}
+
+
+
