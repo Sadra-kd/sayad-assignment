@@ -9,7 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/cheques")
@@ -24,7 +23,7 @@ public class ChequeController {
     @PreAuthorize("hasRole('TELLER')")
     public ResponseEntity<Cheque> issue(@RequestBody IssueChequeRequest request) {
         try {
-            Cheque issuedCheque = chequeService.issueCheque(request.getDrawerId(), request.getNumber(), request.getAmount(), LocalDate.now());
+            Cheque issuedCheque = chequeService.issueCheque(request.getDrawerId(), request.getNumber(), request.getAmount(), java.time.LocalDate.now());
             return new ResponseEntity<>(issuedCheque, HttpStatus.CREATED);
         } catch (IllegalArgumentException | IllegalStateException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -35,7 +34,7 @@ public class ChequeController {
     @PreAuthorize("hasRole('TELLER')")
     public ResponseEntity<Cheque> present(@PathVariable("id") Long id) {
         try {
-            Cheque presentedCheque = chequeService.presentCheque(id, LocalDate.now());
+            Cheque presentedCheque = chequeService.presentCheque(id, java.time.LocalDate.now());
             return ResponseEntity.ok(presentedCheque);
         } catch (ChequeService.ChequeBounceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
